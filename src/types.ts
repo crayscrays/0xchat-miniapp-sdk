@@ -11,7 +11,8 @@ export interface GroupMember {
 
 export interface AgentConfig {
   apiKey: string;
-  webhookSecret: string;
+  /** Optional — used to verify webhook signatures when the server sends X-Webhook-Signature. */
+  webhookSecret?: string;
   baseUrl?: string;
 }
 

@@ -110,7 +110,7 @@ export class MessageContext {
 export class Agent {
   private handlers = new Map<AgentEventName, AgentEventHandler[]>();
   private api: ApiClient;
-  private webhookSecret: string;
+  private webhookSecret?: string;
 
   constructor(config: AgentConfig) {
     this.api = new ApiClient(config.apiKey, config.baseUrl || DEFAULT_BASE_URL);
@@ -125,6 +125,7 @@ export class Agent {
   }
 
   private verifySignature(rawBody: Buffer | string, signature: string | undefined): boolean {
+    if (!this.webhookSecret) return true; // skip verification when no secret configured
     if (!signature) return false;
     const body = typeof rawBody === "string" ? rawBody : rawBody.toString("utf8");
     const expected = crypto.createHmac("sha256", this.webhookSecret).update(body).digest("hex");
