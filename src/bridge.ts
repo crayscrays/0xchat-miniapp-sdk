@@ -1,18 +1,18 @@
-import {
+import type {
   AppBridgeConfig,
-  BridgeError,
-  UserProfile,
-  Contact,
-  GroupSummary,
-  SendTransactionParams,
-  SignMessageParams,
-  ShareCardParams,
-  ShareCardToGroupParams,
   AddBotParams,
   BotDeployment,
+  Contact,
+  GroupMember,
+  GroupSummary,
   ReadContractParams,
+  SendTransactionParams,
+  ShareCardParams,
+  ShareCardToGroupParams,
+  SignMessageParams,
+  UserProfile,
 } from "./types";
-import type { GroupMember } from "../shared";
+import { BridgeError } from "./types";
 
 interface PendingHandler {
   resolve: (value: any) => void;
@@ -80,8 +80,10 @@ export class AppBridge {
     getBalance: (params: { token?: string }) => this.request<string>("wallet.getBalance", params),
     sendTransaction: (params: SendTransactionParams) =>
       this.request<string>("wallet.sendTransaction", params),
-    signMessage: (params: SignMessageParams) => this.request<string>("wallet.signMessage", params),
-    readContract: (params: ReadContractParams) => this.request<any>("wallet.readContract", params),
+    signMessage: (params: SignMessageParams) =>
+      this.request<string>("wallet.signMessage", params),
+    readContract: (params: ReadContractParams) =>
+      this.request<any>("wallet.readContract", params),
   };
 
   user = {
@@ -94,7 +96,8 @@ export class AppBridge {
 
   groups = {
     list: () => this.request<GroupSummary[]>("groups.list"),
-    getMembers: (groupId: string) => this.request<GroupMember[]>("groups.getMembers", { groupId }),
+    getMembers: (groupId: string) =>
+      this.request<GroupMember[]>("groups.getMembers", { groupId }),
   };
 
   chat = {
@@ -125,4 +128,8 @@ export class AppBridge {
       this.request("navigation.openApp", { appSlug, params }).catch(() => {});
     },
   };
+}
+
+export function createAppBridge(config: AppBridgeConfig & { timeout?: number }): AppBridge {
+  return new AppBridge(config);
 }

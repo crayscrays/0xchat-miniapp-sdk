@@ -1,31 +1,26 @@
 {
   "name": "@0xchat/miniapp-sdk",
   "version": "0.1.0",
-  "description": "SDK for building agents and mini-apps on 0xChat",
-  "main": "dist/index.js",
-  "module": "dist/index.mjs",
-  "types": "dist/index.d.ts",
+  "description": "Build agents and mini-apps on 0xChat with wallet, identity, social graph, and webhook support.",
+  "type": "module",
   "exports": {
     ".": {
       "types": "./dist/index.d.ts",
-      "import": "./dist/index.mjs",
-      "require": "./dist/index.js"
-    },
-    "./agent": {
-      "types": "./dist/agent/index.d.ts",
-      "import": "./dist/agent/index.mjs",
-      "require": "./dist/agent/index.js"
-    },
-    "./app": {
-      "types": "./dist/app/index.d.ts",
-      "import": "./dist/app/index.mjs",
-      "require": "./dist/app/index.js"
+      "import": "./dist/index.js",
+      "require": "./dist/index.cjs"
     }
   },
+  "main": "./dist/index.cjs",
+  "types": "./dist/index.d.ts",
   "scripts": {
     "build": "tsup",
-    "dev": "tsup --watch"
+    "dev": "tsup --watch",
+    "typecheck": "tsc --noEmit",
+    "prepublishOnly": "npm run build"
   },
+  "keywords": ["0xchat", "sdk", "mini-app", "agent", "web3", "nostr"],
+  "author": "0xchat",
+  "license": "MIT",
   "dependencies": {
     "express": "^5.0.0"
   },
@@ -36,6 +31,5 @@
   },
   "files": [
     "dist"
-  ],
-  "license": "MIT"
+  ]
 }

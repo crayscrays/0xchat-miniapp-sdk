@@ -1,7 +1,13 @@
 import crypto from "crypto";
 import express, { Request, Response } from "express";
-import { AgentConfig, AgentEventHandler, AgentEventName, CardMessage, WebhookEvent } from "./types";
-import type { GroupMember } from "../shared";
+import type {
+  AgentConfig,
+  AgentEventHandler,
+  AgentEventName,
+  CardMessage,
+  GroupMember,
+  WebhookEvent,
+} from "./types";
 
 const DEFAULT_BASE_URL = "https://api.0xchat.com";
 
@@ -31,24 +37,14 @@ class ApiClient {
   sendMessage(groupId: string, channelId: string, content: string) {
     return this.fetch("/api/agent/send", {
       method: "POST",
-      body: JSON.stringify({
-        group_id: groupId,
-        channel_id: channelId,
-        content,
-        content_type: "text",
-      }),
+      body: JSON.stringify({ group_id: groupId, channel_id: channelId, content, content_type: "text" }),
     });
   }
 
   sendCard(groupId: string, channelId: string, card: CardMessage) {
     return this.fetch("/api/agent/send", {
       method: "POST",
-      body: JSON.stringify({
-        group_id: groupId,
-        channel_id: channelId,
-        content: JSON.stringify(card),
-        content_type: "app_card",
-      }),
+      body: JSON.stringify({ group_id: groupId, channel_id: channelId, content: JSON.stringify(card), content_type: "app_card" }),
     });
   }
 
@@ -57,19 +53,14 @@ class ApiClient {
   }
 
   getState(groupId: string, key: string) {
-    return this.fetch(
-      `/api/agent/groups/${encodeURIComponent(groupId)}/state/${encodeURIComponent(key)}`
-    );
+    return this.fetch(`/api/agent/groups/${encodeURIComponent(groupId)}/state/${encodeURIComponent(key)}`);
   }
 
   setState(groupId: string, key: string, value: any) {
-    return this.fetch(
-      `/api/agent/groups/${encodeURIComponent(groupId)}/state/${encodeURIComponent(key)}`,
-      {
-        method: "PUT",
-        body: JSON.stringify({ value }),
-      }
-    );
+    return this.fetch(`/api/agent/groups/${encodeURIComponent(groupId)}/state/${encodeURIComponent(key)}`, {
+      method: "PUT",
+      body: JSON.stringify({ value }),
+    });
   }
 }
 
@@ -201,4 +192,8 @@ export class Agent {
 
     return app.listen(port);
   }
+}
+
+export function createAgent(config: AgentConfig): Agent {
+  return new Agent(config);
 }

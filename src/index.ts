@@ -1,43 +1,44 @@
-// Shared
-export type { GroupMember } from "./shared";
-
-// Agent — server-side (Node.js): receive webhooks, reply to messages, manage group state
-export { Agent, MessageContext, createAgent } from "./agent/index";
+// ─── Agent (server-side: receive webhooks, reply to messages, manage group state) ─
+export { Agent, MessageContext, createAgent } from "./agent";
 export type {
   AgentConfig,
-  WebhookEvent,
-  WebhookSender,
+  AgentEventHandler,
+  AgentEventName,
   ActionEvent,
-  JoinedEvent,
-  RemovedEvent,
-  CardMessage,
   CardAction,
   CardActionStyle,
   CardActionType,
-  CardPaymentAction,
   CardField,
   CardMemberAction,
-  AgentEventName,
-  AgentEventHandler,
-} from "./agent/index";
+  CardMessage,
+  CardPaymentAction,
+  JoinedEvent,
+  RemovedEvent,
+  WebhookEvent,
+  WebhookSender,
+} from "./types";
 
-// App — client-side (browser): iframe bridge for mini-apps running inside 0xChat
-export { AppBridge, BridgeError, createAppBridge } from "./app/index";
+// ─── App / Bridge (client-side: iframe bridge for mini-apps running in 0xChat) ─
+export { AppBridge, createAppBridge } from "./bridge";
+export { MockAppBridge, createMockBridge } from "./mock";
+export type { MockBridgeConfig } from "./mock";
+export { BridgeError } from "./types";
 export type {
+  AddBotParams,
   AppBridgeConfig,
+  AppCard,
+  AppCardAction,
+  AppCardField,
+  BotDeployment,
   BridgeMessage,
   BridgeResponse,
-  UserProfile,
   Contact,
+  GroupMember,
   GroupSummary,
+  ReadContractParams,
   SendTransactionParams,
-  SignMessageParams,
   ShareCardParams,
   ShareCardToGroupParams,
-  AppCard,
-  AppCardField,
-  AppCardAction,
-  AddBotParams,
-  BotDeployment,
-  ReadContractParams,
-} from "./app/index";
+  SignMessageParams,
+  UserProfile,
+} from "./types";
