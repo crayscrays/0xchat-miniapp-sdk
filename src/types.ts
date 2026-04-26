@@ -14,6 +14,11 @@ export interface AgentConfig {
   /** Optional — used to verify webhook signatures when the server sends X-Webhook-Signature. */
   webhookSecret?: string;
   baseUrl?: string;
+  /**
+   * Enable dev mode — outbound API calls are logged to console instead of hitting the network.
+   * The webhook server still runs so you can receive real events via ngrok/localtunnel.
+   */
+  dev?: boolean;
 }
 
 export interface WebhookSender {

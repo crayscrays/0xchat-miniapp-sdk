@@ -14,10 +14,16 @@ const DEFAULT_BASE_URL = "https://api.0xchat.com";
 class ApiClient {
   constructor(
     private apiKey: string,
-    private baseUrl: string
+    private baseUrl: string,
+    private dev: boolean
   ) {}
 
   private async fetch(path: string, init: RequestInit = {}): Promise<any> {
+    if (this.dev) {
+      const body = init.body ? JSON.parse(init.body as string) : undefined;
+      console.log(`[miniapp-sdk:dev] ${init.method || "GET"} ${path}`, body ?? "");
+      return null;
+    }
     const res = await globalThis.fetch(`${this.baseUrl}${path}`, {
       ...init,
       headers: {
@@ -113,7 +119,7 @@ export class Agent {
   private webhookSecret?: string;
 
   constructor(config: AgentConfig) {
-    this.api = new ApiClient(config.apiKey, config.baseUrl || DEFAULT_BASE_URL);
+    this.api = new ApiClient(config.apiKey, config.baseUrl || DEFAULT_BASE_URL, config.dev ?? false);
     this.webhookSecret = config.webhookSecret;
   }
 
