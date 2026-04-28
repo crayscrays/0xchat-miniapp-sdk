@@ -1,44 +1,51 @@
-// ─── Agent (server-side: receive webhooks, reply to messages, manage group state) ─
-export { Agent, MessageContext, createAgent } from "./agent";
+// ─── Agent (server-side) ─────────────────────────────────────────────────────
+export { Agent, MessageContext, SlashCommandContext, createAgent } from "./agent";
 export type {
   AgentConfig,
-  AgentEventHandler,
-  AgentEventName,
+  GroupMember,
+  WebhookEvent,
+  WebhookSender,
   ActionEvent,
+  JoinedEvent,
+  RemovedEvent,
+  CardMessage,
   CardAction,
   CardActionStyle,
   CardActionType,
+  CardPaymentAction,
   CardField,
   CardMemberAction,
-  CardMessage,
-  CardPaymentAction,
-  JoinedEvent,
-  RemovedEvent,
-  WebhookEvent,
-  WebhookSender,
+  AgentEventName,
+  AgentEventHandler,
+  CommandOption,
+  SlashCommandDefinition,
+  ResolvedUser,
+  SlashCommandPayload,
+  SlashCommandEvent,
 } from "./types";
 
-// ─── App / Bridge (client-side: iframe bridge for mini-apps running in 0xChat) ─
-export { AppBridge, createAppBridge } from "./bridge";
-export { MockAppBridge, createMockBridge } from "./mock";
-export type { MockBridgeConfig } from "./mock";
+// ─── App / Bridge (client-side) ──────────────────────────────────────────────
+export { AppBridge, BridgeProvider, createAppBridge } from "./bridge";
 export { BridgeError } from "./types";
 export type {
-  AddBotParams,
   AppBridgeConfig,
-  AppCard,
-  AppCardAction,
-  AppCardField,
-  BotDeployment,
   BridgeMessage,
   BridgeResponse,
+  UserProfile,
   Contact,
-  GroupMember,
   GroupSummary,
-  ReadContractParams,
   SendTransactionParams,
+  SignMessageParams,
   ShareCardParams,
   ShareCardToGroupParams,
-  SignMessageParams,
-  UserProfile,
+  AppCard,
+  AppCardField,
+  AppCardAction,
+  AddBotParams,
+  BotDeployment,
+  ReadContractParams,
 } from "./types";
+
+// ─── Mock (testing / local dev) ──────────────────────────────────────────────
+export { MockAppBridge, createMockBridge } from "./mock";
+export type { MockBridgeConfig } from "./mock";

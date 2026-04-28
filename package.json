@@ -18,7 +18,14 @@
     "typecheck": "tsc --noEmit",
     "prepublishOnly": "npm run build"
   },
-  "keywords": ["0xchat", "sdk", "mini-app", "agent", "web3", "nostr"],
+  "keywords": [
+    "0xchat",
+    "sdk",
+    "mini-app",
+    "agent",
+    "web3",
+    "nostr"
+  ],
   "author": "0xchat",
   "license": "MIT",
   "dependencies": {
@@ -26,7 +33,7 @@
   },
   "devDependencies": {
     "@types/express": "^5.0.0",
-    "@types/node": "^20.0.0",
+    "@types/node": "^20.19.39",
     "tsup": "^8.0.0",
     "typescript": "^5.0.0"
   },

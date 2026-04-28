@@ -1,7 +1,6 @@
 import type {
   AddBotParams,
   AppBridgeConfig,
-  AppCard,
   BotDeployment,
   Contact,
   GroupMember,
@@ -13,8 +12,6 @@ import type {
   SignMessageParams,
   UserProfile,
 } from "./types";
-import { BridgeError } from "./types";
-
 export interface MockBridgeConfig extends AppBridgeConfig {
   walletAddress?: string;
   profile?: Partial<UserProfile>;
@@ -88,13 +85,25 @@ export class MockAppBridge {
   groups = {
     list: async (): Promise<GroupSummary[]> => {
       this.log("groups.list");
-      return this.cfg.groups ?? [{ id: "mock-group-1", name: "Dev Group", avatar: "", memberCount: 2 }];
+      return (
+        this.cfg.groups ?? [{ id: "mock-group-1", name: "Dev Group", avatar: "", memberCount: 2 }]
+      );
     },
     getMembers: async (groupId: string): Promise<GroupMember[]> => {
       this.log("groups.getMembers", { groupId });
       return [
-        { walletAddress: "0xf00d000000000000000000000000000000000001", displayName: "dev.eth", avatar: "", roles: ["admin"] },
-        { walletAddress: "0xbeef000000000000000000000000000000000002", displayName: "alice.eth", avatar: "", roles: ["member"] },
+        {
+          walletAddress: "0xf00d000000000000000000000000000000000001",
+          displayName: "dev.eth",
+          avatar: "",
+          roles: ["admin"],
+        },
+        {
+          walletAddress: "0xbeef000000000000000000000000000000000002",
+          displayName: "alice.eth",
+          avatar: "",
+          roles: ["member"],
+        },
       ];
     },
   };
@@ -128,8 +137,12 @@ export class MockAppBridge {
   };
 
   navigation = {
-    openGroup: (groupId: string) => { this.log("navigation.openGroup", { groupId }); },
-    openDm: (peerAddress: string) => { this.log("navigation.openDm", { peerAddress }); },
+    openGroup: (groupId: string) => {
+      this.log("navigation.openGroup", { groupId });
+    },
+    openDm: (peerAddress: string) => {
+      this.log("navigation.openDm", { peerAddress });
+    },
     openApp: (appSlug: string, params?: Record<string, string>) => {
       this.log("navigation.openApp", { appSlug, params });
     },

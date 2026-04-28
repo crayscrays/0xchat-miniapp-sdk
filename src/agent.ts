@@ -6,6 +6,9 @@ import type {
   AgentEventName,
   CardMessage,
   GroupMember,
+  ResolvedUser,
+  SlashCommandDefinition,
+  SlashCommandEvent,
   WebhookEvent,
 } from "./types";
 
@@ -40,35 +43,59 @@ class ApiClient {
     return text ? JSON.parse(text) : null;
   }
 
-  sendMessage(groupId: string, channelId: string, content: string) {
-    return this.fetch("/api/agent/send", {
-      method: "POST",
-      body: JSON.stringify({ group_id: groupId, channel_id: channelId, content, content_type: "text" }),
-    });
-  }
-
-  sendCard(groupId: string, channelId: string, card: CardMessage) {
-    return this.fetch("/api/agent/send", {
-      method: "POST",
-      body: JSON.stringify({ group_id: groupId, channel_id: channelId, content: JSON.stringify(card), content_type: "app_card" }),
-    });
-  }
-
-  getGroupMembers(groupId: string): Promise<GroupMember[]> {
-    return this.fetch(`/api/agent/groups/${encodeURIComponent(groupId)}/members`);
-  }
-
-  getState(groupId: string, key: string) {
-    return this.fetch(`/api/agent/groups/${encodeURIComponent(groupId)}/state/${encodeURIComponent(key)}`);
-  }
-
-  setState(groupId: string, key: string, value: any) {
-    return this.fetch(`/api/agent/groups/${encodeURIComponent(groupId)}/state/${encodeURIComponent(key)}`, {
+  registerCommands(commands: SlashCommandDefinition[]) {
+    return this.fetch("/api/agent/commands", {
       method: "PUT",
-      body: JSON.stringify({ value }),
+      body: JSON.stringify({ commands }),
     });
+  }
+
+  sendMessage(groupId: string | number, channelId: string | number, content: string) {
+    return this.fetch("/api/agent/send", {
+      method: "POST",
+      body: JSON.stringify({
+        groupId: Number(groupId),
+        channelId: Number(channelId),
+        content,
+        contentType: "text",
+      }),
+    });
+  }
+
+  sendCard(groupId: string | number, channelId: string | number, card: CardMessage) {
+    return this.fetch("/api/agent/send", {
+      method: "POST",
+      body: JSON.stringify({
+        groupId: Number(groupId),
+        channelId: Number(channelId),
+        card,
+        contentType: "app_card",
+      }),
+    });
+  }
+
+  getGroupMembers(groupId: string | number): Promise<GroupMember[]> {
+    return this.fetch(`/api/agent/groups/${encodeURIComponent(String(groupId))}/members`);
+  }
+
+  getState(groupId: string | number, key: string) {
+    return this.fetch(
+      `/api/agent/groups/${encodeURIComponent(String(groupId))}/state/${encodeURIComponent(key)}`
+    );
+  }
+
+  setState(groupId: string | number, key: string, value: any) {
+    return this.fetch(
+      `/api/agent/groups/${encodeURIComponent(String(groupId))}/state/${encodeURIComponent(key)}`,
+      {
+        method: "PUT",
+        body: JSON.stringify({ value }),
+      }
+    );
   }
 }
+
+// ── MessageContext ─────────────────────────────────────
 
 export class MessageContext {
   public sender: WebhookEvent["sender"];
@@ -88,14 +115,18 @@ export class MessageContext {
   ) {
     this.raw = event;
     this.event = event.event;
-    this.groupId = event.group_id;
-    this.channelId = event.channel_id;
-    this.messageId = event.message_id;
-    this.sender = event.sender;
-    this.content = event.content;
-    this.contentType = event.content_type;
-    this.mentioned = event.mentioned;
-    this.timestamp = event.timestamp;
+    this.groupId = event.group_id ?? String(event.payload?.groupId ?? "");
+    this.channelId = event.channel_id ?? String(event.payload?.channelId ?? "");
+    this.messageId = event.message_id ?? String(event.payload?.messageId ?? "");
+    this.sender = event.sender ?? {
+      wallet: event.payload?.senderWallet,
+      displayName: "",
+      avatar: "",
+    };
+    this.content = event.content ?? event.payload?.content ?? "";
+    this.contentType = event.content_type ?? "text";
+    this.mentioned = event.mentioned ?? false;
+    this.timestamp = event.timestamp ?? event.payload?.createdAt ?? "";
   }
 
   reply(content: string) {
@@ -113,13 +144,88 @@ export class MessageContext {
   };
 }
 
+// ── SlashCommandContext ────────────────────────────────
+
+export class SlashCommandContext {
+  public commandName: string;
+  public options: Record<string, any>;
+  public resolved: { users: Record<string, ResolvedUser> };
+  public rawArgs: string;
+  public groupId: number;
+  public channelId: number;
+  public senderWallet: string;
+  public raw: SlashCommandEvent;
+
+  private _pendingReply: { content?: string; card?: CardMessage } | null = null;
+
+  constructor(
+    private api: ApiClient,
+    event: SlashCommandEvent
+  ) {
+    this.raw = event;
+    const p = event.payload;
+    this.commandName = p.commandName;
+    this.options = p.options;
+    this.resolved = p.resolved;
+    this.rawArgs = p.rawArgs;
+    this.groupId = p.groupId;
+    this.channelId = p.channelId;
+    this.senderWallet = p.senderWallet;
+  }
+
+  // Synchronous reply — returned directly in the webhook HTTP response.
+  // 0xChat posts it as a bot message in the channel automatically.
+  reply(content: string): void {
+    this._pendingReply = { content };
+  }
+
+  replyCard(card: CardMessage): void {
+    this._pendingReply = { card };
+  }
+
+  // Lookup a resolved user from options.
+  // Pass the option value (e.g. ctx.options.user) — handles "@" prefix automatically.
+  resolveUser(mention: string): ResolvedUser | undefined {
+    return (
+      this.resolved.users[mention] ??
+      this.resolved.users[mention.startsWith("@") ? mention : `@${mention}`]
+    );
+  }
+
+  // Async fallback — use this when your response takes longer than 3 seconds
+  sendMessage(content: string) {
+    return this.api.sendMessage(this.groupId, this.channelId, content);
+  }
+
+  sendCard(card: CardMessage) {
+    return this.api.sendCard(this.groupId, this.channelId, card);
+  }
+
+  group = {
+    getMembers: () => this.api.getGroupMembers(this.groupId),
+    getState: (key: string) => this.api.getState(this.groupId, key),
+    setState: (key: string, value: any) => this.api.setState(this.groupId, key, value),
+  };
+
+  /** @internal */
+  _getReply() {
+    return this._pendingReply;
+  }
+}
+
+// ── Agent ──────────────────────────────────────────────
+
 export class Agent {
   private handlers = new Map<AgentEventName, AgentEventHandler[]>();
   private api: ApiClient;
   private webhookSecret?: string;
 
   constructor(config: AgentConfig) {
-    this.api = new ApiClient(config.apiKey, config.baseUrl || DEFAULT_BASE_URL, config.dev ?? false);
+    this.api = new ApiClient(
+      config.apiKey,
+      config.baseUrl || DEFAULT_BASE_URL,
+      config.dev ?? false
+    );
     this.webhookSecret = config.webhookSecret;
   }
 
@@ -128,6 +234,11 @@ export class Agent {
     list.push(handler);
     this.handlers.set(event, list);
     return this;
+  }
+
+  // Register slash commands with 0xChat — call once at startup or deploy time.
+  registerCommands(commands: SlashCommandDefinition[]) {
+    return this.api.registerCommands(commands);
   }
 
   private verifySignature(rawBody: Buffer | string, signature: string | undefined): boolean {
@@ -188,12 +299,29 @@ export class Agent {
         }
 
         const eventName: AgentEventName = payload.event;
-        const ctx = new MessageContext(this.api, payload);
 
-        res.status(200).json({ ok: true });
-        this.dispatch(eventName, ctx).catch((err) =>
-          console.error(`[miniapp-sdk] dispatch error:`, err)
-        );
+        if (eventName === "slash_command") {
+          // Slash commands: await the handler so the bot can reply synchronously.
+          // The reply is returned in the HTTP response body — 0xChat posts it as a
+          // bot message automatically. No need to call sendMessage() for simple replies.
+          const ctx = new SlashCommandContext(this.api, payload as SlashCommandEvent);
+          await this.dispatch("slash_command", ctx).catch((err) =>
+            console.error(`[miniapp-sdk] slash_command dispatch error:`, err)
+          );
+          const reply = ctx._getReply();
+          if (reply?.content || reply?.card) {
+            res.status(200).json(reply);
+          } else {
+            res.status(204).send();
+          }
+        } else {
+          // All other events: ack immediately, dispatch async.
+          const ctx = new MessageContext(this.api, payload);
+          res.status(200).json({ ok: true });
+          this.dispatch(eventName, ctx).catch((err) =>
+            console.error(`[miniapp-sdk] dispatch error:`, err)
+          );
+        }
       }
     );
 

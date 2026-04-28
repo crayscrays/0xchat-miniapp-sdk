@@ -98,7 +98,54 @@ export interface CardMessage {
   memberActions?: CardMemberAction[];
 }
 
-export type AgentEventName = "message" | "action" | "joined" | "removed" | "payment_complete";
+// ─── Slash commands ───────────────────────────────────────────────────────────
+
+export interface CommandOption {
+  name: string;
+  description?: string;
+  type: "user" | "string" | "integer" | "boolean";
+  required?: boolean;
+}
+
+export interface SlashCommandDefinition {
+  name: string;
+  description?: string;
+  options?: CommandOption[];
+}
+
+export interface ResolvedUser {
+  walletAddress: string;
+  username: string | null;
+  displayName: string | null;
+}
+
+export interface SlashCommandPayload {
+  commandName: string;
+  options: Record<string, any>;
+  resolved: { users: Record<string, ResolvedUser> };
+  rawArgs: string;
+  groupId: number;
+  channelId: number;
+  senderWallet: string;
+  messageId: number;
+  createdAt: string;
+}
+
+export interface SlashCommandEvent {
+  event: "slash_command";
+  payload: SlashCommandPayload;
+}
+
+// ─── Event system ─────────────────────────────────────────────────────────────
+
+export type AgentEventName =
+  | "message"
+  | "slash_command"
+  | "action"
+  | "joined"
+  | "removed"
+  | "payment_complete";
+
 export type AgentEventHandler = (ctx: any) => void | Promise<void>;
 
 // ─── App / Bridge (client-side) ──────────────────────────────────────────────
